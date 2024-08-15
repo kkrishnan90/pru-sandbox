@@ -27,38 +27,40 @@ module "api_enabler" {
   source     = "./modules/api-enabler"
 }
 
-module "vpc" {
-  for_each   = { for i, v in local.project_ids : i => v }
-  project_id = each.value 
-  network_name = "my-vpc-${each.key}"  # Use a unique name based on the project index
-  source     = "./modules/vpc"
-  depends_on = [module.api_enabler] 
+# Create VPCs outside the module dependencies
+resource "google_compute_network" "vpc_network" {
+  for_each = { for i, v in local.project_ids : i => v }
+  project                 = each.value
+  name                    = "my-vpc-${each.key}"
+  auto_create_subnetworks = true
 }
 
+# Get VPC network IDs for each project
+locals {
+  vpc_network_ids = { for i, v in local.project_ids : i => google_compute_network.vpc_network[i].id }
+}
 
 module "cloud_nat" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
-  network_id = module.vpc[each.key].network_id
+  network_id = local.vpc_network_ids[each.key]
   source     = "./modules/cloud-nat"
-  depends_on = [module.api_enabler, module.vpc] 
+  depends_on = [module.api_enabler, google_compute_network.vpc_network] 
 }
 
 module "firewall" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
   source     = "./modules/firewall"
-  depends_on = [module.api_enabler, module.vpc] 
+  depends_on = [module.api_enabler, google_compute_network.vpc_network] 
 }
 
 module "service_account" {
   for_each   = { for i, v in local.project_ids : i => v }
-  project_id = module.vpc[each.key].project_id # Use the output from vpc module
+  project_id = each.value
   source     = "./modules/service-account"
   depends_on = [module.api_enabler] 
 }
-
-
 
 module "gpu_notebook" {
   for_each   = { for i, v in local.project_ids : i => v }
@@ -67,7 +69,7 @@ module "gpu_notebook" {
 
   instance_name = "ai-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "g2-standard-4"
-  depends_on = [module.api_enabler, module.vpc] 
+  depends_on = [module.api_enabler, google_compute_network.vpc_network] 
 }
 
 module "non_gpu_notebook" {
@@ -77,5 +79,5 @@ module "non_gpu_notebook" {
 
   instance_name = "ai-no-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "n1-standard-4"
-  depends_on = [module.api_enabler, module.vpc] 
+  depends_on = [module.api_enabler, google_compute_network.vpc_network] 
 }
