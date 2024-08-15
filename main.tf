@@ -35,6 +35,7 @@ resource "google_compute_network" "vpc_network" {
   auto_create_subnetworks = true
 }
 
+
 # Get VPC network IDs for each project
 locals {
   vpc_network_ids = { for i, v in local.project_ids : i => google_compute_network.vpc_network[i].id }
@@ -43,9 +44,9 @@ locals {
 module "cloud_nat" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
-  network_id = local.vpc_network_ids[each.key]
+  network_id = local.vpc_network_ids[each.key] # Pass network ID as input
   source     = "./modules/cloud-nat"
-  depends_on = [module.api_enabler, google_compute_network.vpc_network] 
+  depends_on = [module.api_enabler]  # Remove dependency on VPC resource
 }
 
 module "firewall" {

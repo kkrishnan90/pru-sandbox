@@ -18,5 +18,5 @@ variable "roles" {
 
 variable "gsuite_user" {
   type = string
-  default = "kkrish@google.com"
+  default = "gsglife.gcppruaisandbox.reader@prugcp.com"
 }
