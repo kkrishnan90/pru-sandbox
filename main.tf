@@ -70,7 +70,7 @@ module "gpu_notebook" {
 
   instance_name = "ai-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "g2-standard-4"
-  depends_on = [module.api_enabler, google_compute_network.vpc_network] 
+  depends_on = [module.api_enabler, google_compute_network.vpc_network,module.firewall,module.cloud_nat,module.service_account] 
 }
 
 module "non_gpu_notebook" {
@@ -80,5 +80,5 @@ module "non_gpu_notebook" {
 
   instance_name = "ai-no-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "n1-standard-4"
-  depends_on = [module.api_enabler, google_compute_network.vpc_network] 
+  depends_on = [module.api_enabler, google_compute_network.vpc_network,module.firewall,module.cloud_nat,module.service_account] 
 }
