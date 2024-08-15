@@ -1,6 +1,6 @@
 resource "google_compute_firewall" "allow_egress" {
   project  = var.project_id
-  network  = var.network_name
+  network = var.network_id
   name     = "allow-egress-all"
   priority = 1000
 

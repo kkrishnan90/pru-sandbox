@@ -15,3 +15,7 @@ variable "zone" {
 variable "machine_type" {
   type = string
 }
+
+variable "network" {
+  type = string
+}

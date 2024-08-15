@@ -53,6 +53,7 @@ module "firewall" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
   source     = "./modules/firewall"
+  network_id = google_compute_network.vpc_network[each.key].id  
   depends_on = [module.api_enabler, google_compute_network.vpc_network] 
 }
 
@@ -67,7 +68,7 @@ module "gpu_notebook" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
   source     = "./modules/workbench-notebook"
-
+  network = google_compute_network.vpc_network[each.key].id
   instance_name = "ai-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "g2-standard-4"
   depends_on = [module.api_enabler, google_compute_network.vpc_network,module.firewall,module.cloud_nat,module.service_account] 
@@ -77,7 +78,7 @@ module "non_gpu_notebook" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
   source     = "./modules/workbench-notebook"
-
+  network = google_compute_network.vpc_network[each.key].id
   instance_name = "ai-no-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "n1-standard-4"
   depends_on = [module.api_enabler, google_compute_network.vpc_network,module.firewall,module.cloud_nat,module.service_account] 

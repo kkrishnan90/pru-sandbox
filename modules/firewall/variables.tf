@@ -6,3 +6,6 @@ variable "network_name" {
   type = string
   default = "default"
 }
+variable "network_id" {
+  type = string
+}
