@@ -84,11 +84,10 @@ resource "google_project_iam_member" "tf_project_sa_roles" {
   for_each = toset([
     "roles/notebooks.runner",
     "roles/notebooks.viewer",
-    "roles/aiplatform.user", // AI Platform Developer
+    "roles/ml.developer", // AI Platform Developer
     "roles/notebooks.viewer", // Notebooks Viewer
     "roles/iam.serviceAccountUser", // Service Account User
     "roles/storage.admin", // Storage Admin
-    "roles/aiplatform.modelMonitoringAgent", // Vertex AI Model Monitoring Service Agent
     "roles/aiplatform.user", // Vertex AI User
   ])
   project = each.value  # Use the project ID from the loop
