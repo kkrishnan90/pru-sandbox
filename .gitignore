@@ -1,0 +1,6 @@
+.terraform.lock.hcl
+planfile
+project_count.txt
+.terraform
+terraform.tfstate
+terraform.tfstate.backup
