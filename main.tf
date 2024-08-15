@@ -45,7 +45,6 @@ module "cloud_nat" {
   project_id = each.value 
   network_id = local.vpc_network_ids[each.key] # Pass network ID as input
   source     = "./modules/cloud-nat"
-  depends_on = [module.api_enabler]  # Remove dependency on VPC resource
 }
 
 module "firewall" {
@@ -53,14 +52,12 @@ module "firewall" {
   project_id = each.value 
   network_id = local.vpc_network_ids[each.key] # Pass network ID as input
   source     = "./modules/firewall"
-  depends_on = [module.api_enabler]  # Remove dependency on VPC resource
 }
 
 module "service_account" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value
   source     = "./modules/service-account"
-  depends_on = [module.api_enabler]  # Remove dependency on VPC resource
 }
 
 module "gpu_notebook" {
@@ -70,7 +67,6 @@ module "gpu_notebook" {
   network    = local.vpc_network_ids[each.key] # Pass network ID as input
   instance_name = "ai-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "g2-standard-4"
-  depends_on = [module.api_enabler, module.firewall, module.cloud_nat, module.service_account]  # Remove dependency on VPC resource
 }
 
 module "non_gpu_notebook" {
@@ -80,5 +76,4 @@ module "non_gpu_notebook" {
   network    = local.vpc_network_ids[each.key] # Pass network ID as input
   instance_name = "ai-no-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "n1-standard-4"
-  depends_on = [module.api_enabler, module.firewall, module.cloud_nat, module.service_account]  # Remove dependency on VPC resource
 }
