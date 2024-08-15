@@ -98,12 +98,13 @@ locals {
   ])
 }
 
-resource "google_service_account_iam_member" "tf_project_sa_roles" {
+resource "google_project_iam_member" "tf_project_sa_roles" {
   for_each = {
     for pr in local.project_roles : "${pr.project_id}-${pr.role}" => pr
   }
 
-  service_account_id = "projects/${each.value.project_id}/serviceAccounts/tf-project-sa@${each.value.project_id}.iam.gserviceaccount.com"
-  role               = each.value.role
-  member             = "projectEditor:${each.value.project_id}"
+  project = each.value.project_id
+  role    = each.value.role
+  member  = "serviceAccount:tf-project-sa@${each.value.project_id}.iam.gserviceaccount.com"
 }
+
