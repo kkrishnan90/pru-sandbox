@@ -81,17 +81,17 @@ module "non_gpu_notebook" {
 }
 
 resource "google_project_iam_member" "tf_project_sa_roles" {
-  for_each = { for i, v in local.project_ids : i => toset([
-    "roles/notebooks.runner",
-    "roles/notebooks.viewer",
-    "roles/aiplatform.user", // AI Platform Developer
-    "roles/notebooks.viewer", // Notebooks Viewer
-    "roles/iam.serviceAccountUser", // Service Account User
-    "roles/storage.admin", // Storage Admin
-    "roles/aiplatform.modelMonitoringAgent", // Vertex AI Model Monitoring Service Agent
-    "roles/aiplatform.user", // Vertex AI User
-  ]) }
-  project = each.key  # Use the project ID from the outer loop
-  role    = each.value  # Use the role from the inner loop
-  member  = "serviceAccount:tf-project-sa@${each.key}.iam.gserviceaccount.com"  # Correct service account email
+  for_each = { for project_id in local.project_ids : 
+               project_id => { for role in [
+                 "roles/notebooks.runner",
+                 "roles/notebooks.viewer",
+                 "roles/aiplatform.user",
+                 "roles/iam.serviceAccountUser",
+                 "roles/storage.admin",
+                 "roles/aiplatform.modelMonitoringAgent",
+               ] : role => role } 
+             }
+  project = each.key
+  role    = each.value  # each.value is now a single role string
+  member  = "serviceAccount:tf-project-sa@${each.key}.iam.gserviceaccount.com"
 }
