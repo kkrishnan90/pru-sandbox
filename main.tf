@@ -35,7 +35,6 @@ resource "google_compute_network" "vpc_network" {
   auto_create_subnetworks = true
 }
 
-
 # Get VPC network IDs for each project
 locals {
   vpc_network_ids = { for i, v in local.project_ids : i => google_compute_network.vpc_network[i].id }
@@ -52,34 +51,34 @@ module "cloud_nat" {
 module "firewall" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
+  network_id = local.vpc_network_ids[each.key] # Pass network ID as input
   source     = "./modules/firewall"
-  network_id = google_compute_network.vpc_network[each.key].id  
-  depends_on = [module.api_enabler, google_compute_network.vpc_network] 
+  depends_on = [module.api_enabler]  # Remove dependency on VPC resource
 }
 
 module "service_account" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value
   source     = "./modules/service-account"
-  depends_on = [module.api_enabler] 
+  depends_on = [module.api_enabler]  # Remove dependency on VPC resource
 }
 
 module "gpu_notebook" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
   source     = "./modules/workbench-notebook"
-  network = google_compute_network.vpc_network[each.key].id
+  network    = local.vpc_network_ids[each.key] # Pass network ID as input
   instance_name = "ai-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "g2-standard-4"
-  depends_on = [module.api_enabler, google_compute_network.vpc_network,module.firewall,module.cloud_nat,module.service_account] 
+  depends_on = [module.api_enabler, module.firewall, module.cloud_nat, module.service_account]  # Remove dependency on VPC resource
 }
 
 module "non_gpu_notebook" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
   source     = "./modules/workbench-notebook"
-  network = google_compute_network.vpc_network[each.key].id
+  network    = local.vpc_network_ids[each.key] # Pass network ID as input
   instance_name = "ai-no-gpu-100-${random_id.instance_suffix.hex}"
   machine_type  = "n1-standard-4"
-  depends_on = [module.api_enabler, google_compute_network.vpc_network,module.firewall,module.cloud_nat,module.service_account] 
+  depends_on = [module.api_enabler, module.firewall, module.cloud_nat, module.service_account]  # Remove dependency on VPC resource
 }
