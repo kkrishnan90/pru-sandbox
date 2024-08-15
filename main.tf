@@ -66,6 +66,7 @@ module "gpu_notebook" {
   source     = "./modules/workbench-notebook"
   network    = local.vpc_network_ids[each.key] # Pass network ID as input
   instance_name = "ai-gpu-100-${random_id.instance_suffix.hex}"
+  service_account = "tf-project-sa@${each.value}.iam.gserviceaccount.com"
   machine_type  = "g2-standard-4"
 }
 
@@ -75,5 +76,22 @@ module "non_gpu_notebook" {
   source     = "./modules/workbench-notebook"
   network    = local.vpc_network_ids[each.key] # Pass network ID as input
   instance_name = "ai-no-gpu-100-${random_id.instance_suffix.hex}"
+  service_account = "tf-project-sa@${each.value}.iam.gserviceaccount.com"
   machine_type  = "n1-standard-4"
+}
+
+resource "google_project_iam_member" "tf_project_sa_roles" {
+  for_each = toset([
+    "roles/notebooks.runner",
+    "roles/notebooks.viewer",
+    "roles/aiplatform.user", // AI Platform Developer
+    "roles/notebooks.viewer", // Notebooks Viewer
+    "roles/iam.serviceAccountUser", // Service Account User
+    "roles/storage.admin", // Storage Admin
+    "roles/aiplatform.modelMonitoringAgent", // Vertex AI Model Monitoring Service Agent
+    "roles/aiplatform.user", // Vertex AI User
+  ])
+  project = each.value  # Use the project ID from the loop
+  role    = each.key
+  member  = "serviceAccount:tf-project-sa@${each.value}.iam.gserviceaccount.com"
 }

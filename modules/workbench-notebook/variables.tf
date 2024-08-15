@@ -19,3 +19,7 @@ variable "machine_type" {
 variable "network" {
   type = string
 }
+
+variable "service_account" {
+  type = string
+}

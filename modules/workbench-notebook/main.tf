@@ -13,6 +13,10 @@ resource "google_workbench_instance" "default" {
     network_interfaces {
       network = var.network
     }
+    service_accounts {
+     email = var.service_account
+    }
+
   }
 
 }
