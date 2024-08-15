@@ -30,9 +30,11 @@ module "api_enabler" {
 module "vpc" {
   for_each   = { for i, v in local.project_ids : i => v }
   project_id = each.value 
+  network_name = "my-vpc-${each.key}"  # Use a unique name based on the project index
   source     = "./modules/vpc"
   depends_on = [module.api_enabler] 
 }
+
 
 module "cloud_nat" {
   for_each   = { for i, v in local.project_ids : i => v }
