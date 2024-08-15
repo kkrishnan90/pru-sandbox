@@ -89,7 +89,6 @@ locals {
         "roles/aiplatform.user",
         "roles/iam.serviceAccountUser",
         "roles/storage.admin",
-        "roles/aiplatform.modelMonitoringAgent",
       ] : {
         project_id = project_id
         role       = role
