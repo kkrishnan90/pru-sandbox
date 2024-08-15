@@ -80,18 +80,30 @@ module "non_gpu_notebook" {
   machine_type  = "n1-standard-4"
 }
 
-resource "google_project_iam_member" "tf_project_sa_roles" {
-  for_each = { for project_id in local.project_ids : 
-               project_id => { for role in [
-                 "roles/notebooks.runner",
-                 "roles/notebooks.viewer",
-                 "roles/aiplatform.user",
-                 "roles/iam.serviceAccountUser",
-                 "roles/storage.admin",
-                 "roles/aiplatform.modelMonitoringAgent",
-               ] : role => role } 
-             }
-  project = each.key
-  role    = each.value  # each.value is now a single role string
-  member  = "serviceAccount:tf-project-sa@${each.key}.iam.gserviceaccount.com"
+locals {
+  project_roles = flatten([
+    for project_id in local.project_ids : [
+      for role in [
+        "roles/notebooks.runner",
+        "roles/notebooks.viewer",
+        "roles/aiplatform.user",
+        "roles/iam.serviceAccountUser",
+        "roles/storage.admin",
+        "roles/aiplatform.modelMonitoringAgent",
+      ] : {
+        project_id = project_id
+        role       = role
+      }
+    ]
+  ])
+}
+
+resource "google_service_account_iam_member" "tf_project_sa_roles" {
+  for_each = {
+    for pr in local.project_roles : "${pr.project_id}-${pr.role}" => pr
+  }
+
+  service_account_id = "projects/${each.value.project_id}/serviceAccounts/tf-project-sa@${each.value.project_id}.iam.gserviceaccount.com"
+  role               = each.value.role
+  member             = "projectEditor:${each.value.project_id}"
 }
